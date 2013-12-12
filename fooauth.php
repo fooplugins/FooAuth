@@ -5,7 +5,7 @@
  * Better Authentication For WordPress. Including LDAP single sign on.
  *
  * @package   FooAuth
- * @author    Brad Vincent <bradvin@gmail.com>
+ * @author    Brad Vincent <bradvin@gmail.com>, Stephen Welgemoed <stwelgemoed@gmail.com>
  * @license   GPL-2.0+
  * @link      https://github.com/fooplugins/FooAuth
  * @copyright 2013 Brad Vincent
@@ -15,7 +15,7 @@
  * Plugin URI:        https://github.com/fooplugins/FooAuth
  * Description:       Better Authentication For WordPress. Including LDAP single sign on.
  * Version:           0.0.1
- * Author:            Brad Vincent
+ * Author:            Brad Vincent, Stephen Welgemoed
  * Author URI:        http://fooplugins.com
  * Text Domain:       fooauth
  * License:           GPL-2.0+
