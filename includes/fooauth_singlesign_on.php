@@ -6,11 +6,11 @@
  * Time: 4:11 PM
  */
 
-if (!class_exists('fooauth_single_signon')) {
-    class fooauth_single_signon
+if (!class_exists('FooAuth_Single_Signon')) {
+    class FooAuth_Single_Signon
     {
-        function ad_sso_get_user_id( $userid ) {
-            $user = get_userdatabylogin( $userid );
+        function ad_sso_get_user_id( $user_login ) {
+            $user = get_user_by('login', $user_login);
             return $user->ID;
         }
 
@@ -83,29 +83,51 @@ if (!class_exists('fooauth_single_signon')) {
 
         }
 
-        /*  Get domain and username of user */
-    $cred = explode('\\', $_SERVER['REMOTE_USER']);
-        /*  seperate domain and user variables  */
-    list($ad_sso_local_domain,, $ad_sso_local_userid) = $cred;
-    if ( is_user_logged_in() ) {
-    global $current_user;
-    get_currentuserinfo();
-    if ( !(strtolower(trim($current_user->user_login)) === strtolower(trim($ad_sso_local_userid)))) {
-    wp_logout();
-    }
-}
+		function update_user_details($domain, $username) {
 
-    if ( !is_user_logged_in() ) {
-        if (username_exists( $ad_sso_local_userid )) {
-            ad_sso_register_user($ad_sso_local_domain, $ad_sso_local_userid, false); // update name and email
+		}
 
-        } else {
-            ad_sso_register_user($ad_sso_local_domain, $ad_sso_local_userid, true); // register user
-        }
-        $user_id = ad_sso_get_user_id( $ad_sso_local_userid );
-        wp_set_current_user($user_id, $ad_sso_local_userid);
-        wp_set_auth_cookie($user_id);
-        do_action('wp_login', $ad_sso_local_userid);
-    }
-    }
+		function register_new_user($domain, $username) {
+
+		}
+
+		function extract_current_user_info() {
+			if ( empty( $_SERVER['REMOTE_USER'] )) return false;
+
+			$current_credentials = explode('\\', $_SERVER['REMOTE_USER']);
+			list($ad_domain,, $ad_username) = $current_credentials;
+
+			return array(
+				'domain' => $ad_domain,
+				'username' => $ad_username
+			);
+		}
+
+		function is_on_login_page() {
+			return 'wp-login.php' === $GLOBALS['pagenow'];
+		}
+
+		function auto_login() {
+			if ( !is_on_login_page() && !is_user_logged_in() ) {
+				$user_info = $this->extract_current_user_info();
+
+				if ($user_info === false) return;
+
+				$username = $user_info['username'];
+				$domain = $user_info['domain'];
+
+				if (username_exists( $username )) {
+					$this->update_user_details($domain, $username);
+				} else {
+					$this->register_new_user($domain, $username);
+				}
+
+				$user = get_user_by('login', $username);
+				$user_id = $user->ID;
+				wp_set_current_user($user_id, $username);
+				wp_set_auth_cookie($user_id);
+				do_action('wp_login', $username);
+			}
+		}
+	}
 }
