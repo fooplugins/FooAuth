@@ -1,0 +1,3 @@
+[submodule "includes/foopluginbase"]
+	path = includes/foopluginbase
+	url = https://github.com/fooplugins/Foo_Plugin_Base.git
