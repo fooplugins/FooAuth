@@ -27,9 +27,17 @@ function fooauth_create_settings()
         'tab' => 'general'
     );
     $settings[] = array(
+        'id' => 'ldap_fqdn',
+        'title' => __('FQDN', 'fooauth'),
+        'desc' => __('Fully qualified domain name. Eg. fooplugins.com', 'fooauth'),
+        'type' => 'text',
+        'section' => 'service_account',
+        'tab' => 'general'
+    );
+    $settings[] = array(
         'id' => 'ldap_domain',
         'title' => __('Domain', 'fooauth'),
-        'desc' => __('Fully qualified domain name', 'fooauth'),
+        'desc' => __('Name of your domain. Eg. fooplugins', 'fooauth'),
         'type' => 'text',
         'section' => 'service_account',
         'tab' => 'general'
@@ -115,6 +123,7 @@ function fooauth_create_settings()
         'title' => __('Account Suffix', 'fooauth'),
         'type' => 'text',
         'section' => 'user_options',
+        'desc' => 'Often the suffix of your email address. Eg. @fooplugins.com',
         'tab' => 'user'
     );
     $settings[] = array(
