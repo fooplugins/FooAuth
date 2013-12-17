@@ -130,6 +130,7 @@ function fooauth_create_settings() {
       'cn' => __('Fullname', 'fooauth'),
       'mail' => __('Email Address', 'fooauth')
     ),
+    'default' => "displayName",
     'section' => 'user_setting',
     'tab' => 'general'
   );
