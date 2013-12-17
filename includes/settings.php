@@ -33,14 +33,6 @@ function fooauth_create_settings() {
     'section' => 'service_account',
     'tab' => 'general'
   );
-  $settings[] = array(
-    'id' => 'ldap_domain',
-    'title' => __('Domain', 'fooauth'),
-    'desc' => __('Name of your domain. Eg. fooplugins', 'fooauth'),
-    'type' => 'text',
-    'section' => 'service_account',
-    'tab' => 'general'
-  );
   //endregion
 
   //region Domain Controller
@@ -106,6 +98,7 @@ function fooauth_create_settings() {
     'id' => 'authentication_mixed_auth',
     'title' => __('Enable Mixed Authentication', 'fooauth'),
     'type' => 'checkbox',
+    'desc' => __('Allow users to log out and back in with a different username and password','fooauth'),
     'section' => 'single_signon',
     'tab' => 'general'
   );
@@ -118,7 +111,7 @@ function fooauth_create_settings() {
   );
   $settings[] = array(
     'id' => 'display_name',
-    'title' => __('Display Name', 'fooauth'),
+    'title' => __('User Display Name', 'fooauth'),
     'type' => 'select',
     'choices' => array(
       'samaccountname' => __('Username', 'fooauth'),
@@ -130,7 +123,8 @@ function fooauth_create_settings() {
       'cn' => __('Fullname', 'fooauth'),
       'mail' => __('Email Address', 'fooauth')
     ),
-    'default' => "displayName",
+    'default' => 'displayName',
+    'desc' => __('The name that is shown when the user is logged in','fooauth'),
     'section' => 'user_setting',
     'tab' => 'general'
   );
@@ -150,87 +144,31 @@ function fooauth_create_settings() {
     'section' => 'user_setting',
     'tab' => 'general'
   );
+  $settings[] = array(
+    'id' => 'auto_user_updates',
+    'title' => __('Update Users', 'fooauth'),
+    'type' => 'checkbox',
+    'desc' => __('Automatically update users details when they login','fooauth'),
+    'section' => 'user_setting',
+    'tab' => 'general'
+  );
   //endregion
 
-  //endregion
-
-  //region Sync Tab
-  $tabs['sync'] = __('Sync', 'fooauth');
-
-  $sections['sync_options'] = array(
-    'tab' => 'user',
-    'name' => __('Sync Options', 'fooauth')
-  );
-
-  $settings[] = array(
-    'id' => 'sync_auto_user_creation',
-    'title' => __('Automatically Create Users', 'fooauth'),
-    'type' => 'checkbox',
-    'default' => 'on',
-    'section' => 'sync_options',
-    'tab' => 'sync'
+  //region Security Settings
+  $sections['security_settings'] = array(
+    'tab' => 'general',
+    'name' => __('Security Options', 'fooauth')
   );
   $settings[] = array(
-    'id' => 'sync_auto_user_updates',
-    'title' => __('Automatically Update Users', 'fooauth'),
-    'type' => 'checkbox',
-    'section' => 'sync_options',
-    'tab' => 'sync'
-  );
-  $settings[] = array(
-    'id' => 'sync_import_groups',
-    'title' => __('Import Groups', 'fooauth'),
-    'type' => 'checkbox',
-    'section' => 'sync_options',
-    'tab' => 'sync'
-  );
-
-  //endregion
-
-  //region Authorization Tab
-  $tabs['authorization'] = __('Authorization', 'fooauth');
-
-  $sections['authorization_options'] = array(
-    'tab' => 'authorization',
-    'name' => __('Authorization Options', 'fooauth')
-  );
-  $settings[] = array(
-    'id' => 'authorization_enable_page_auth',
-    'title' => __('Enable Page Authorization', 'fooauth'),
-    'type' => 'checkbox',
-    'section' => 'authorization_options',
-    'tab' => 'authorization'
-  );
-  $settings[] = array(
-    'id' => 'authorization_enable_post_auth',
-    'title' => __('Enable Post Authorization', 'fooauth'),
-    'type' => 'checkbox',
-    'section' => 'authorization_options',
-    'tab' => 'authorization'
-  );
-  $settings[] = array(
-    'id' => 'authorization_enable_menu_auth',
-    'title' => __('Enable Menu Authorization', 'fooauth'),
-    'type' => 'checkbox',
-    'section' => 'authorization_options',
-    'tab' => 'authorization'
-  );
-  $settings[] = array(
-    'id' => 'authorization_login_groups',
-    'title' => __('Authorized Login Groups', 'fooauth'),
+    'id' => 'authorized_groups',
+    'title' => __('Authorized Groups', 'fooauth'),
     'type' => 'text',
-    'desc' => __('Restrict login to specific security groups', 'fooauth'),
-    'section' => 'authorization_options',
-    'tab' => 'authorization'
+    'desc' => __('Comma separated list of groups to restrict site access', 'fooauth'),
+    'section' => 'security_settings',
+    'tab' => 'general'
   );
-  $settings[] = array(
-    'id' => 'authorization_role_to_ad_mapping',
-    'title' => __('Role to AD group mapping', 'fooauth'),
-    'type' => 'text',
-    'desc' => __('Map AD groups to specific Wordpress roles', 'fooauth'),
-    'section' => 'authorization_options',
-    'tab' => 'authorization'
-  );
+  //endregion
+
   //endregion
 
   return array(
