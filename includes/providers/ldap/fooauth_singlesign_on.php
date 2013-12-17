@@ -31,6 +31,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
           //Create result set
           $entries = ldap_get_entries($connection, $result);
 
+          //Get groups the user is in
+          $user_groups = $entries[0]["memberof"];
+
           $email = (empty($entries[0]["mail"][0]) ? $username . '@' . $fqdn : $entries[0]["mail"][0]);
           $firstname = $entries[0]["givenname"][0];
           $surname = $entries[0]["sn"][0];
@@ -49,7 +52,6 @@ if (!class_exists('FooAuth_Single_Signon')) {
       } catch (Exception $e) {
         return new WP_Error('666', 'Caught exception connecting to domain: ', $e->getMessage());
       }
-
     }
 
     private function update_user_details($username, $user_id) {

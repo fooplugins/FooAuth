@@ -150,6 +150,7 @@ function fooauth_create_settings() {
     'type' => 'checkbox',
     'desc' => __('Automatically update users details when they login','fooauth'),
     'section' => 'user_setting',
+    'default' => 'on',
     'tab' => 'general'
   );
   //endregion
