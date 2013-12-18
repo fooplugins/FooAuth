@@ -57,25 +57,10 @@ function fooauth_create_settings() {
     'tab' => 'general'
   );
   $settings[] = array(
-    'id' => 'ldap_tls',
-    'title' => __('Use TLS', 'fooauth'),
-    'type' => 'checkbox',
-    'desc' => __('Secure connection between Wordpress and AD servers. NOTE : To use TLS, the port must be set to 389', 'fooauth'),
-    'section' => 'domain_controller',
-    'tab' => 'general'
-  );
-  $settings[] = array(
     'id' => 'ldap_organizational_unit',
     'title' => __('Organizational Unit', 'fooauth'),
     'type' => 'text',
     'desc' => __('Base DN Eg. DC=sub,DC=domain,DC=com', 'fooauth'),
-    'section' => 'domain_controller',
-    'tab' => 'general'
-  );
-  $settings[] = array(
-    'id' => 'ldap_network_timeout',
-    'title' => __('Network Timeout', 'fooauth'),
-    'type' => 'text',
     'section' => 'domain_controller',
     'tab' => 'general'
   );
@@ -149,8 +134,8 @@ function fooauth_create_settings() {
     'title' => __('Update Users', 'fooauth'),
     'type' => 'checkbox',
     'desc' => __('Automatically update users details when they login','fooauth'),
-    'section' => 'user_setting',
     'default' => 'on',
+    'section' => 'user_setting',
     'tab' => 'general'
   );
   //endregion

@@ -31,9 +31,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
           //Create result set
           $entries = ldap_get_entries($connection, $result);
 
-          //Get groups the user is in
           $user_groups = $entries[0]["memberof"];
-
           $email = (empty($entries[0]["mail"][0]) ? $username . '@' . $fqdn : $entries[0]["mail"][0]);
           $firstname = $entries[0]["givenname"][0];
           $surname = $entries[0]["sn"][0];
@@ -43,7 +41,8 @@ if (!class_exists('FooAuth_Single_Signon')) {
             'email' => $email,
             'name' => $firstname,
             'surname' => $surname,
-            'display_name' => $display_name
+            'display_name' => $display_name,
+            'user_groups' => $user_groups
           );
 
         } catch (Exception $e) {
@@ -55,16 +54,22 @@ if (!class_exists('FooAuth_Single_Signon')) {
     }
 
     private function update_user_details($username, $user_id) {
-      $user = $this->get_details_from_ldap($username);
+      $auto_update_user = FooAuth::get_instance()->options()->get('auto_update_user',false);
 
-      $userdata = array(
-        'ID' => $user_id,
-        'first_name' => $user['name'],
-        'last_name' => $user['surname'],
-        'display_name' => $user['display_name']
-      );
+      if ('on' === $auto_update_user) {
+        $user = $this->get_details_from_ldap($username);
 
-      wp_update_user($userdata);
+        $userdata = array(
+          'ID' => $user_id,
+          'first_name' => $user['name'],
+          'last_name' => $user['surname'],
+          'display_name' => $user['display_name']
+        );
+
+        wp_update_user($userdata);
+
+        update_user_meta($user_id,'user_groups',$user['user_groups']);
+      }
     }
 
     private function register_new_user($username) {
@@ -86,7 +91,11 @@ if (!class_exists('FooAuth_Single_Signon')) {
           'user_email' => $user['email']
         );
 
-        return wp_insert_user($userdata);
+        $user_id = wp_insert_user($userdata);
+
+        add_user_meta($user_id,'user_groups',$user['user_groups']);
+
+        return $user_id;
       }
       return $user;
     }
