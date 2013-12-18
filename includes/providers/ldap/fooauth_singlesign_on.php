@@ -4,6 +4,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
   class FooAuth_Single_Signon {
     function __construct() {
       add_action('after_setup_theme', array($this, 'auto_login'));
+      add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
     }
 
     private function get_details_from_ldap($username) {
@@ -54,7 +55,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
     }
 
     private function update_user_details($username, $user_id) {
-      $auto_update_user = FooAuth::get_instance()->options()->get('auto_update_user',false);
+      $auto_update_user = FooAuth::get_instance()->options()->get('auto_update_user', false);
 
       if ('on' === $auto_update_user) {
         $user = $this->get_details_from_ldap($username);
@@ -67,8 +68,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
         );
 
         wp_update_user($userdata);
-
-        update_user_meta($user_id,'user_groups',$user['user_groups']);
+        update_user_meta($user_id, 'user_groups', $user['user_groups']);
       }
     }
 
@@ -93,7 +93,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
         $user_id = wp_insert_user($userdata);
 
-        add_user_meta($user_id,'user_groups',$user['user_groups']);
+        add_user_meta($user_id, 'user_groups', $user['user_groups'], true);
 
         return $user_id;
       }
@@ -116,15 +116,58 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return 'wp-login.php' === $GLOBALS['pagenow'];
     }
 
-    function auto_login() {
+    private function is_user_authorized($username) {
+      $authorized_groups = FooAuth::get_instance()->options()->get('authorized_groups', '');
+      $user_groups = '';
+
+      $user_id = username_exists($username);
+      if (isset($user_id)) {
+        $user_groups = get_user_meta($user_id, 'user_groups');
+      } else {
+        $user_groups = $this->get_details_from_ldap($username)['user_groups'];
+      }
+
+      if (isset($authorized_groups)) {
+        if (isset($user_groups)) {
+          $authorized_groups_array = explode(',', $authorized_groups);
+
+          foreach ($user_groups as $user_group) {
+            if (foo_contains($authorized_groups_array, $user_group)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      return true;
+    }
+
+    private function is_sso_enabled() {
       $do_sso = FooAuth::get_instance()->options()->get('ldap_single_signon', false);
-      if ('on' === $do_sso) {
+      return ('on' === $do_sso);
+    }
+
+    function user_authorization_check($user_login, $user) {
+      $username = $user_login;
+      if (!$this->is_user_authorized($username)) {
+        //User is not authorized to login to the site. Redirect to a selected page
+        $redirect_url = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', get_home_url());
+        wp_redirect($redirect_url);
+        exit;
+      }
+    }
+
+    function auto_login() {
+      if ($this->is_sso_enabled()) {
         if (!$this->is_on_login_page() && !is_user_logged_in()) {
           $user_info = $this->extract_current_user_info();
 
           if ($user_info === false) return;
 
           $username = $user_info['username'];
+
+          //check if the user has access to log in to the site
+          $this->user_authorization_check($username, null);
 
           $user_id = username_exists($username);
 

@@ -83,7 +83,7 @@ function fooauth_create_settings() {
     'id' => 'authentication_mixed_auth',
     'title' => __('Enable Mixed Authentication', 'fooauth'),
     'type' => 'checkbox',
-    'desc' => __('Allow users to log out and back in with a different username and password','fooauth'),
+    'desc' => __('Allow users to log out and back in with a different username and password', 'fooauth'),
     'section' => 'single_signon',
     'tab' => 'general'
   );
@@ -109,7 +109,7 @@ function fooauth_create_settings() {
       'mail' => __('Email Address', 'fooauth')
     ),
     'default' => 'displayName',
-    'desc' => __('The name that is shown when the user is logged in','fooauth'),
+    'desc' => __('The name that is shown when the user is logged in', 'fooauth'),
     'section' => 'user_setting',
     'tab' => 'general'
   );
@@ -133,7 +133,7 @@ function fooauth_create_settings() {
     'id' => 'auto_user_updates',
     'title' => __('Update Users', 'fooauth'),
     'type' => 'checkbox',
-    'desc' => __('Automatically update users details when they login','fooauth'),
+    'desc' => __('Automatically update users details when they login', 'fooauth'),
     'default' => 'on',
     'section' => 'user_setting',
     'tab' => 'general'
@@ -153,6 +153,15 @@ function fooauth_create_settings() {
     'section' => 'security_settings',
     'tab' => 'general'
   );
+  $settings[] = array(
+    'id' => 'unauthorized_redirect_page',
+    'title' => __('Redirect Page', 'fooauth'),
+    'type' => 'select',
+    'choices' => get_page_choices(),
+    'desc' => __('Redirect unauthorized users to this page', 'fooauth'),
+    'section' => 'security_settings',
+    'tab' => 'general'
+  );
   //endregion
 
   //endregion
@@ -162,4 +171,34 @@ function fooauth_create_settings() {
     'sections' => $sections,
     'settings' => $settings
   );
+}
+
+function get_page_choices() {
+  $page_args = array(
+    'authors' => '',
+    'child_of' => 0,
+    'date_format' => get_option('date_format'),
+    'depth' => 0,
+    'echo' => 1,
+    'exclude' => '',
+    'include' => '',
+    'link_after' => '',
+    'link_before' => '',
+    'post_type' => 'page',
+    'post_status' => 'publish',
+    'show_date' => '',
+    'sort_column' => 'menu_order, post_title',
+    'title_li' => __('Pages'),
+    'walker' => ''
+  );
+
+  $site_pages = get_pages($page_args);
+  $site_pages_array = array();
+
+  foreach ($site_pages as $site_page) {
+    $page_title = $site_page->post_title;
+    $page_permalink = get_permalink($site_page->ID);
+    $site_pages_array[$page_permalink] = $page_title;
+  }
+  return $site_pages_array;
 }
