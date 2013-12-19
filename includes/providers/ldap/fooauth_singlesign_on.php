@@ -32,7 +32,17 @@ if (!class_exists('FooAuth_Single_Signon')) {
           //Create result set
           $entries = ldap_get_entries($connection, $result);
 
-          $user_groups = $entries[0]["memberof"];
+          $user_groups_dn = $entries[0]["memberof"];
+          $user_groups_array = array();
+
+          //get just the group name out of the DN details
+          foreach($user_groups_dn as $user_group){
+            $group_details = $this->explode_dn($user_group);
+            $user_groups_array[] = str_replace('CN=','',$group_details[0]);
+          }
+
+          $user_groups = implode(',',$user_groups_array);
+
           $email = (empty($entries[0]["mail"][0]) ? $username . '@' . $fqdn : $entries[0]["mail"][0]);
           $firstname = $entries[0]["givenname"][0];
           $surname = $entries[0]["sn"][0];
@@ -55,7 +65,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
     }
 
     private function update_user_details($username, $user_id) {
-      $auto_update_user = FooAuth::get_instance()->options()->get('auto_update_user', false);
+      $auto_update_user = FooAuth::get_instance()->options()->get('auto_user_updates', false);
 
       if ('on' === $auto_update_user) {
         $user = $this->get_details_from_ldap($username);
@@ -124,15 +134,16 @@ if (!class_exists('FooAuth_Single_Signon')) {
       if (isset($user_id)) {
         $user_groups = get_user_meta($user_id, 'user_groups');
       } else {
-        $user_groups = $this->get_details_from_ldap($username)['user_groups'];
+        $user = $this->get_details_from_ldap($username);
+        $user_groups = $user['user_groups'];
       }
 
-      if (isset($authorized_groups)) {
+      if (isset($authorized_groups) && !empty($authorized_groups)) {
         if (isset($user_groups)) {
-          $authorized_groups_array = explode(',', $authorized_groups);
+          $user_group_array = explode(',',$user_groups);
 
-          foreach ($user_groups as $user_group) {
-            if (foo_contains($authorized_groups_array, $user_group)) {
+          foreach ($user_group_array as $user_group) {
+            if (foo_contains($authorized_groups, $user_group)) {
               return true;
             }
           }
@@ -145,6 +156,15 @@ if (!class_exists('FooAuth_Single_Signon')) {
     private function is_sso_enabled() {
       $do_sso = FooAuth::get_instance()->options()->get('ldap_single_signon', false);
       return ('on' === $do_sso);
+    }
+
+    private function explode_dn($dn, $with_attributes=0){
+      $result = ldap_explode_dn($dn, $with_attributes);
+      //translate hex code into ASCII again
+      foreach($result as $key => $value){
+        $result[$key] = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $value);
+      }
+      return $result;
     }
 
     function user_authorization_check($user_login, $user) {
@@ -177,7 +197,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
             $user_id = $this->register_new_user($username);
           }
 
-          if (!isset($user_id) && !is_wp_error($user_id)) {
+          if (isset($user_id) && !is_wp_error($user_id)) {
             wp_set_current_user($user_id, $username);
             wp_set_auth_cookie($user_id);
             do_action('wp_login', $username);

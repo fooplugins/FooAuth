@@ -149,7 +149,7 @@ function fooauth_create_settings() {
     'id' => 'authorized_groups',
     'title' => __('Authorized Groups', 'fooauth'),
     'type' => 'text',
-    'desc' => __('Comma separated list of groups to restrict site access', 'fooauth'),
+    'desc' => __('Comma separated list of AD groups to restrict site access', 'fooauth'),
     'section' => 'security_settings',
     'tab' => 'general'
   );
