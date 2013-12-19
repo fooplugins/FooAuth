@@ -2,6 +2,7 @@
 
 if (!class_exists('FooAuth_Single_Signon')) {
   class FooAuth_Single_Signon {
+
     function __construct() {
       add_action('after_setup_theme', array($this, 'auto_login'));
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
@@ -36,12 +37,12 @@ if (!class_exists('FooAuth_Single_Signon')) {
           $user_groups_array = array();
 
           //get just the group name out of the DN details
-          foreach($user_groups_dn as $user_group){
+          foreach ($user_groups_dn as $user_group) {
             $group_details = $this->explode_dn($user_group);
-            $user_groups_array[] = str_replace('CN=','',$group_details[0]);
+            $user_groups_array[] = str_replace('CN=', '', $group_details[0]);
           }
 
-          $user_groups = implode(',',$user_groups_array);
+          $user_groups = implode(',', $user_groups_array);
 
           $email = (empty($entries[0]["mail"][0]) ? $username . '@' . $fqdn : $entries[0]["mail"][0]);
           $firstname = $entries[0]["givenname"][0];
@@ -126,11 +127,41 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return 'wp-login.php' === $GLOBALS['pagenow'];
     }
 
-    private function is_user_authorized($username) {
-      $authorized_groups = FooAuth::get_instance()->options()->get('authorized_groups', '');
-      $user_groups = '';
+    private function is_on_redirect_page() {
+      $redirect_page = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', '');
 
+      if (!empty($redirect_page)) {
+        $current_page = $this->get_current_page_url();
+
+        if (!empty($current_page)) {
+          return ($current_page === $redirect_page);
+        }
+      }
+      return false;
+    }
+
+    private function get_current_page_url() {
+      $page_URL = 'http';
+      if ($_SERVER["HTTPS"] == "on") {
+        $page_URL .= "s";
+      }
+      $page_URL .= "://";
+      if ($_SERVER["SERVER_PORT"] != "80") {
+        $page_URL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+      } else {
+        $page_URL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
+      }
+      return $page_URL;
+    }
+
+    private function is_user_authorized($username, $authorized_groups = '') {
+      if(empty($authorized_groups)){
+        $authorized_groups = FooAuth::get_instance()->options()->get('authorized_groups', '');
+      }
+
+      $user_groups = '';
       $user_id = username_exists($username);
+
       if (isset($user_id)) {
         $user_groups = get_user_meta($user_id, 'user_groups');
       } else {
@@ -138,9 +169,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
         $user_groups = $user['user_groups'];
       }
 
-      if (isset($authorized_groups) && !empty($authorized_groups)) {
-        if (isset($user_groups)) {
-          $user_group_array = explode(',',$user_groups);
+      if (!empty($authorized_groups)) {
+        if (!empty($user_groups)) {
+          $user_group_array = explode(',', $user_groups);
 
           foreach ($user_group_array as $user_group) {
             if (foo_contains($authorized_groups, $user_group)) {
@@ -158,22 +189,25 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return ('on' === $do_sso);
     }
 
-    private function explode_dn($dn, $with_attributes=0){
+    private function explode_dn($dn, $with_attributes = 0) {
       $result = ldap_explode_dn($dn, $with_attributes);
       //translate hex code into ASCII again
-      foreach($result as $key => $value){
+      foreach ($result as $key => $value) {
         $result[$key] = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $value);
       }
       return $result;
     }
 
     function user_authorization_check($user_login, $user) {
-      $username = $user_login;
-      if (!$this->is_user_authorized($username)) {
-        //User is not authorized to login to the site. Redirect to a selected page
-        $redirect_url = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', get_home_url());
-        wp_redirect($redirect_url);
-        exit;
+      //if the user is not on the redirect page, check if they are authorized to login to the site
+      if (!$this->is_on_redirect_page()) {
+        $username = $user_login;
+        if (!$this->is_user_authorized($username)) {
+          //User is not authorized to login to the site. Redirect to a selected page
+          $redirect_url = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', '');
+          wp_redirect($redirect_url);
+          exit;
+        }
       }
     }
 

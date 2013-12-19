@@ -41,22 +41,6 @@ function fooauth_create_settings() {
     'name' => __('Domain Controller', 'fooauth')
   );
   $settings[] = array(
-    'id' => 'ldap_domain_controllers',
-    'title' => __('Domain Controllers', 'fooauth'),
-    'type' => 'text',
-    'desc' => __('Comma separated list of domain controllers. Eg. ADCONTROL1,ADCONTROL2,ADCONTROL5', 'fooauth'),
-    'section' => 'domain_controller',
-    'tab' => 'general'
-  );
-  $settings[] = array(
-    'id' => 'ldap_port',
-    'title' => __('Port', 'fooauth'),
-    'type' => 'text',
-    'default' => '389',
-    'section' => 'domain_controller',
-    'tab' => 'general'
-  );
-  $settings[] = array(
     'id' => 'ldap_organizational_unit',
     'title' => __('Organizational Unit', 'fooauth'),
     'type' => 'text',
@@ -76,14 +60,6 @@ function fooauth_create_settings() {
     'id' => 'ldap_single_signon',
     'title' => __('Enable Single Sign-On', 'fooauth'),
     'type' => 'checkbox',
-    'section' => 'single_signon',
-    'tab' => 'general'
-  );
-  $settings[] = array(
-    'id' => 'authentication_mixed_auth',
-    'title' => __('Enable Mixed Authentication', 'fooauth'),
-    'type' => 'checkbox',
-    'desc' => __('Allow users to log out and back in with a different username and password', 'fooauth'),
     'section' => 'single_signon',
     'tab' => 'general'
   );
