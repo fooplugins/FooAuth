@@ -318,7 +318,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
                value="<?php echo get_post_meta($object->ID, 'fooauth-authorized-groups', true); ?>"
                size="30"/>
         <br/>
-        <small class="tiny">Comma separated list of groups</small>
+        <small><?php _e('Comma separated list of AD groups', 'fooauth'); ?></small>
       </p>
     <?php
     }
@@ -329,14 +329,13 @@ if (!class_exists('FooAuth_Single_Signon')) {
       exit;
     }
 
-    private function get_correct_username($remote_user){
+    private function get_correct_username($remote_user) {
       $username = '';
       $logged_in_user = wp_get_current_user();
 
-      if($remote_user['username'] === $logged_in_user->user_login){
+      if ($remote_user['username'] === $logged_in_user->user_login) {
         $username = $remote_user['username'];
-      }
-      else{
+      } else {
         $username = $logged_in_user->user_login;
       }
 
