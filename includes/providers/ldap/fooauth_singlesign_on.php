@@ -155,6 +155,21 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return ('on' === $do_sso);
     }
 
+    private function is_admin_user($user_id) {
+      if (!empty($user_id)) {
+        $user = new WP_User($user_id);
+
+        if (!empty($user)) {
+          foreach ($user->roles as $user_role) {
+            if (strtolower(__('administrator', 'fooauth')) === strtolower($user_role)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
     private function is_user_authorized($username, $authorized_groups = '') {
       if (empty($authorized_groups)) {
         $authorized_groups = FooAuth::get_instance()->options()->get('authorized_groups', '');
@@ -162,6 +177,11 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
       $user_groups = '';
       $user_id = username_exists($username);
+
+      if ($this->is_admin_user($user_id)) {
+        return true;
+      }
+
 
       if (isset($user_id)) {
         $user_groups = get_user_meta($user_id, 'user_groups');
