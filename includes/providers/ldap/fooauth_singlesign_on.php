@@ -8,6 +8,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
       add_action('load-post.php', array($this, 'auth_metabox_setup'));
       add_action('load-post-new.php', array($this, 'auth_metabox_setup'));
+      add_action('wp', array($this, 'check_page_security'));
     }
 
     function auto_login() {
@@ -47,9 +48,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
         $username = $user_login;
         if (!$this->is_user_authorized($username)) {
           //User is not authorized to login to the site. Redirect to a selected page
-          $redirect_url = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', '');
-          wp_redirect($redirect_url);
-          exit;
+          $this->redirect_unauthorized_users();
         }
       }
     }
@@ -278,7 +277,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
     function auth_metabox_setup() {
       add_action('add_meta_boxes', array($this, 'add_auth_metaboxes'));
-      add_action('save_post', array($this, 'save_post_authorized_groups'),10,2);
+      add_action('save_post', array($this, 'save_post_authorized_groups'), 10, 2);
 
     }
 
@@ -287,24 +286,24 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_meta_box('fooauth_authorized_groups', esc_html__('Authorized Groups', 'fooath'), array($this, 'authorized_group_metabox'), 'page', 'side', 'default');
     }
 
-    function save_post_authorized_groups($post_id, $post){
-      if(!isset($_POST['fooauth_authorized_groups_nonce']) || !wp_verify_nonce($_POST['fooauth_authorized_groups_nonce'],basename(__FILE__))) return $post_id;
+    function save_post_authorized_groups($post_id, $post) {
+      $foo_auth_nonce = $_POST['fooauth_authorized_groups_nonce'];
+
+      if (!isset($foo_auth_nonce) || !wp_verify_nonce($foo_auth_nonce, basename(__FILE__))) return $post_id;
 
       $post_type = get_post_type_object($post->post_type);
 
-      if(!current_user_can($post_type->cap->edit_post,$post_id)) return $post_id;
+      if (!current_user_can($post_type->cap->edit_post, $post_id)) return $post_id;
 
-      $new_meta_value = $_POST['fooauth-authorized-groups'];
       $meta_key = 'fooauth-authorized-groups';
+      $new_meta_value = $_POST[$meta_key];
       $meta_value = get_post_meta($post_id, $meta_key, true);
 
-      if(!empty($new_meta_value) && empty($meta_value)){
+      if (!empty($new_meta_value) && empty($meta_value)) {
         add_post_meta($post_id, $meta_key, $new_meta_value, true);
-      }
-      else if(!empty($new_meta_value) && $new_meta_value != $meta_value){
+      } else if (!empty($new_meta_value) && $new_meta_value != $meta_value) {
         update_post_meta($post_id, $meta_key, $new_meta_value);
-      }
-      else if(empty($new_meta_value) && !empty($meta_value)){
+      } else if (empty($new_meta_value) && !empty($meta_value)) {
         delete_post_meta($post_id, $meta_key, $meta_value);
       }
     }
@@ -313,16 +312,42 @@ if (!class_exists('FooAuth_Single_Signon')) {
       ?>
       <?php wp_nonce_field(basename(__FILE__), 'fooauth_authorized_groups_nonce'); ?>
       <p>
-        <label
-          for="fooauth-authorized-groups"><?php _e('AD Groups', 'fooauth'); ?></label>
+        <label for="fooauth-authorized-groups"><?php _e('AD Groups', 'fooauth'); ?></label>
         <br/>
         <input class="widefat" type="text" name="fooauth-authorized-groups" id="fooauth-authorized-groups"
                value="<?php echo get_post_meta($object->ID, 'fooauth-authorized-groups', true); ?>"
                size="30"/>
         <br/>
-        <small class="tiny">Comma seperated list of groups</small>
+        <small class="tiny">Comma separated list of groups</small>
       </p>
     <?php
+    }
+
+    private function redirect_unauthorized_users() {
+      $redirect_url = FooAuth::get_instance()->options()->get('unauthorized_redirect_page', '');
+      wp_redirect($redirect_url);
+      exit;
+    }
+
+    function check_page_security() {
+      $current_post = get_post();
+      $meta_key = 'fooauth-authorized-groups';
+
+      if ('post' === $current_post->post_type) {
+
+      }
+      if ('page' === $current_post->post_type) {
+        $authorized_groups = get_post_meta($current_post->ID, $meta_key, true);
+        if (!empty($authorized_groups)) {
+          $user = $this->get_current_user_info();
+
+          if (!isset($user)) return;
+
+          if (!$this->is_user_authorized($user['username'], $authorized_groups)) {
+            $this->redirect_unauthorized_users();
+          }
+        }
+      }
     }
   }
 }
