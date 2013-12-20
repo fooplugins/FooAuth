@@ -20,7 +20,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
           //check if the user has access to log in to the site
           $this->user_authorization_check($username, null);
 
-          if(!$this->can_user_be_created()) return;
+          if (!$this->can_user_be_created()) return;
 
           $user_id = username_exists($username);
 
@@ -135,9 +135,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return $page_URL;
     }
 
-    private function can_user_be_created(){
+    private function can_user_be_created() {
       //check if the user has been redirected to the redirect page and aren't logged in
-      if($this->is_on_redirect_page() && !is_user_logged_in()){
+      if ($this->is_on_redirect_page() && !is_user_logged_in()) {
         return false;
       }
       return true;
@@ -202,11 +202,15 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
       if (!empty($authorized_groups)) {
         if (!empty($user_groups)) {
-          $user_group_array = explode(',', $user_groups);
+          $user_group_array = explode(',', $user_groups[0]);
+
+          $authorized_groups_array = explode(',', $authorized_groups);
 
           foreach ($user_group_array as $user_group) {
-            if (foo_contains($authorized_groups, $user_group)) {
-              return true;
+            foreach ($authorized_groups_array as $authorized_group) {
+              if (strtolower($user_group) === strtolower($authorized_group)) {
+                return true;
+              }
             }
           }
         }
