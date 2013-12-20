@@ -20,6 +20,8 @@ if (!class_exists('FooAuth_Single_Signon')) {
           //check if the user has access to log in to the site
           $this->user_authorization_check($username, null);
 
+          if(!$this->can_user_be_created()) return;
+
           $user_id = username_exists($username);
 
           if (isset($user_id)) {
@@ -131,6 +133,14 @@ if (!class_exists('FooAuth_Single_Signon')) {
         $page_URL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
       }
       return $page_URL;
+    }
+
+    private function can_user_be_created(){
+      //check if the user has been redirected to the redirect page and aren't logged in
+      if($this->is_on_redirect_page() && !is_user_logged_in()){
+        return false;
+      }
+      return true;
     }
 
     private function is_on_login_page() {
