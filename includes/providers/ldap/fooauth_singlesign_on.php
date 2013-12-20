@@ -18,7 +18,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
           if ($user_info === false) return;
 
-          $username = $user_info['username'];
+          $username = $this->get_correct_username($user_info['username']);
 
           //check if the user has access to log in to the site
           $this->user_authorization_check($username, null);
@@ -329,6 +329,20 @@ if (!class_exists('FooAuth_Single_Signon')) {
       exit;
     }
 
+    private function get_correct_username($remote_user){
+      $username = '';
+      $logged_in_user = wp_get_current_user();
+
+      if($remote_user['username'] === $logged_in_user->user_login){
+        $username = $remote_user['username'];
+      }
+      else{
+        $username = $logged_in_user->user_login;
+      }
+
+      return $username;
+    }
+
     function check_page_security() {
       $current_post = get_post();
       $meta_key = 'fooauth-authorized-groups';
@@ -341,9 +355,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
         if (!empty($authorized_groups)) {
           $user = $this->get_current_user_info();
 
-          if (!isset($user)) return;
+          if (!$user) return;
 
-          if (!$this->is_user_authorized($user['username'], $authorized_groups)) {
+          if (!$this->is_user_authorized($this->get_correct_username($user), $authorized_groups)) {
             $this->redirect_unauthorized_users();
           }
         }
