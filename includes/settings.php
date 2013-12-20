@@ -60,6 +60,7 @@ function fooauth_create_settings() {
     'id' => 'ldap_single_signon',
     'title' => __('Enable Single Sign-On', 'fooauth'),
     'type' => 'checkbox',
+    'desc' => __('Automatically logs a user in using their AD credentials','fooauth'),
     'section' => 'single_signon',
     'tab' => 'general'
   );
