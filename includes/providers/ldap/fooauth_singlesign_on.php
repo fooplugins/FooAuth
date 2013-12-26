@@ -8,7 +8,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
       add_action('load-post.php', array($this, 'auth_metabox_setup'));
       add_action('load-post-new.php', array($this, 'auth_metabox_setup'));
-      add_action('wp', array($this, 'check_page_security'));
+      add_action('wp', array($this, 'check_user_authorization'));
     }
 
     function auto_login() {
@@ -18,7 +18,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
           if ($user_info === false) return;
 
-          $username = $this->get_correct_username($user_info['username']);
+          $username = $this->get_actual_username($user_info['username']);
 
           //check if the user has access to log in to the site
           $this->user_authorization_check($username, null);
@@ -44,12 +44,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
     function user_authorization_check($user_login, $user) {
       //if the user is not on the redirect page, check if they are authorized to login to the site
-      if (!$this->is_on_redirect_page()) {
-        $username = $user_login;
-        if (!$this->is_user_authorized($username)) {
-          //User is not authorized to login to the site. Redirect to a selected page
-          $this->redirect_unauthorized_users();
-        }
+      if (!$this->is_on_redirect_page() && !$this->is_user_authorized($user_login)) {
+        //User is not authorized to login to the site. Redirect to a selected page
+        $this->redirect_unauthorized_users();
       }
     }
 
@@ -278,7 +275,6 @@ if (!class_exists('FooAuth_Single_Signon')) {
     function auth_metabox_setup() {
       add_action('add_meta_boxes', array($this, 'add_auth_metaboxes'));
       add_action('save_post', array($this, 'save_post_authorized_groups'), 10, 2);
-
     }
 
     function add_auth_metaboxes() {
@@ -329,7 +325,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       exit;
     }
 
-    private function get_correct_username($remote_user) {
+    private function get_actual_username($remote_user) {
       $username = '';
       $logged_in_user = wp_get_current_user();
 
@@ -342,23 +338,22 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return $username;
     }
 
-    function check_page_security() {
+    function check_user_authorization() {
       $current_post = get_post();
       $meta_key = 'fooauth-authorized-groups';
 
-      if ('post' === $current_post->post_type) {
+      $authorized_groups = get_post_meta($current_post->ID, $meta_key, true);
 
-      }
-      if ('page' === $current_post->post_type) {
-        $authorized_groups = get_post_meta($current_post->ID, $meta_key, true);
-        if (!empty($authorized_groups)) {
-          $user = $this->get_current_user_info();
+      if (!empty($authorized_groups)) {
+        $user = $this->get_current_user_info();
 
-          if (!$user) return;
+        if (!$user) return;
 
-          if (!$this->is_user_authorized($this->get_correct_username($user), $authorized_groups)) {
-            $this->redirect_unauthorized_users();
-          }
+        if ('post' === $current_post->post_type && !$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
+          $this->redirect_unauthorized_users();
+        }
+        if ('page' === $current_post->post_type && !$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
+          $this->redirect_unauthorized_users();
         }
       }
     }
