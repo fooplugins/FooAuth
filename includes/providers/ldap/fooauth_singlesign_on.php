@@ -8,7 +8,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
       add_action('load-post.php', array($this, 'auth_metabox_setup'));
       add_action('load-post-new.php', array($this, 'auth_metabox_setup'));
-      add_action('wp', array($this, 'check_user_authorization'));
+      if (!is_admin()) {
+        add_action('wp', array($this, 'check_user_authorization'));
+      }
     }
 
     function auto_login() {
@@ -18,7 +20,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
           if ($user_info === false) return;
 
-          $username = $this->get_actual_username($user_info['username']);
+          $username = $this->get_actual_username($user_info);
 
           //check if the user has access to log in to the site
           $this->user_authorization_check($username, null);
@@ -326,15 +328,16 @@ if (!class_exists('FooAuth_Single_Signon')) {
     }
 
     private function get_actual_username($remote_user) {
-      $username = '';
-      $logged_in_user = wp_get_current_user();
+      $username = $remote_user['username'];
 
-      if ($remote_user['username'] === $logged_in_user->user_login) {
-        $username = $remote_user['username'];
-      } else {
-        $username = $logged_in_user->user_login;
+      if (is_user_logged_in()) {
+
+        $logged_in_user = wp_get_current_user();
+
+        if ($username !== $logged_in_user->user_login) {
+          $username = $logged_in_user->user_login;
+        }
       }
-
       return $username;
     }
 
