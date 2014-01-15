@@ -8,6 +8,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
       add_action('load-post.php', array($this, 'auth_metabox_setup'));
       add_action('load-post-new.php', array($this, 'auth_metabox_setup'));
+      add_action('pre_get_posts', array($this, 'filter_allowed_posts'));
       if (!is_admin()) {
         add_action('wp', array($this, 'check_user_authorization'));
       }
@@ -358,6 +359,27 @@ if (!class_exists('FooAuth_Single_Signon')) {
         if ('page' === $current_post->post_type && !$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
           $this->redirect_unauthorized_users();
         }
+      }
+    }
+
+    function filter_allowed_posts($wp_query) {
+
+      $excluded_posts = array();
+
+      //get all the posts for the site
+      $site_posts = get_posts();
+
+      foreach ($site_posts as $site_post) {
+        $authorized_groups = get_post_meta($site_post->ID, 'fooauth-authorized-groups', true);
+
+        if (!empty($authorized_groups)) {
+          $excluded_posts[] = $site_post->ID;
+        }
+      }
+
+      //exclude all posts from the main query that the user is not authorized to view
+      if (!empty($excluded_posts)) {
+        set_query_var('post__not_in', $excluded_posts);
       }
     }
   }
