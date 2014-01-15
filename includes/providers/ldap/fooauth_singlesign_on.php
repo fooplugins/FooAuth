@@ -186,7 +186,6 @@ if (!class_exists('FooAuth_Single_Signon')) {
         $authorized_groups = FooAuth::get_instance()->options()->get('authorized_groups', '');
       }
 
-      $user_groups = '';
       $user_id = username_exists($username);
 
       if ($this->is_admin_user($user_id)) {
@@ -369,11 +368,15 @@ if (!class_exists('FooAuth_Single_Signon')) {
       //get all the posts for the site
       $site_posts = get_posts();
 
+      $user = $this->get_current_user_info();
+
       foreach ($site_posts as $site_post) {
         $authorized_groups = get_post_meta($site_post->ID, 'fooauth-authorized-groups', true);
 
         if (!empty($authorized_groups)) {
-          $excluded_posts[] = $site_post->ID;
+          if (!$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
+            $excluded_posts[] = $site_post->ID;
+          }
         }
       }
 
