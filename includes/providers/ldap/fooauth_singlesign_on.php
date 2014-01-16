@@ -8,7 +8,9 @@ if (!class_exists('FooAuth_Single_Signon')) {
       add_action('wp_login', array($this, 'user_authorization_check'), 10, 2);
       add_action('load-post.php', array($this, 'auth_metabox_setup'));
       add_action('load-post-new.php', array($this, 'auth_metabox_setup'));
-      add_action('pre_get_posts', array($this, 'filter_allowed_posts'));
+      if (!is_admin()) {
+        add_action('pre_get_posts', array($this, 'filter_allowed_posts'));
+      }
       if (!is_admin()) {
         add_action('wp', array($this, 'check_user_authorization'));
       }
@@ -361,26 +363,45 @@ if (!class_exists('FooAuth_Single_Signon')) {
       }
     }
 
-    function filter_allowed_posts($wp_query) {
+    private $excluded_posts = false;
+    private $filter_loop = true;
 
-      $excluded_posts = array();
+    function get_excluded_posts(){
+      if($this->excluded_posts === false){
+        $excluded_posts = array();
 
-      //get all the posts for the site
-      $site_posts = get_posts();
+        $this->filter_loop = false;
 
-      $user = $this->get_current_user_info();
+        //get all the posts for the site
+        $query = new WP_Query(array('post_type' => 'post'));
 
-      foreach ($site_posts as $site_post) {
-        $authorized_groups = get_post_meta($site_post->ID, 'fooauth-authorized-groups', true);
+        $site_posts = $query->get_posts();
 
-        if (!empty($authorized_groups)) {
-          if (!$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
-            $excluded_posts[] = $site_post->ID;
+        $this->filter_loop = true;
+
+        $user = $this->get_current_user_info();
+
+        foreach($site_posts as $site_post){
+          $authorized_groups = get_post_meta($site_post->ID, 'fooauth-authorized-groups', true);
+
+          if(!empty($authorized_groups)){
+            if(!$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)){
+              $excluded_posts[] = $site_post->ID;
+            }
           }
         }
+        $this-$excluded_posts = $excluded_posts;
       }
+      return $this->excluded_posts;
+    }
+
+    function filter_allowed_posts($wp_query) {
+
+      if($this->filter_loop === false) return;
 
       //exclude all posts from the main query that the user is not authorized to view
+      $excluded_posts = $this->get_excluded_posts();
+
       if (!empty($excluded_posts)) {
         set_query_var('post__not_in', $excluded_posts);
       }
