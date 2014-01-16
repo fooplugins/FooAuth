@@ -366,8 +366,8 @@ if (!class_exists('FooAuth_Single_Signon')) {
     private $excluded_posts = false;
     private $filter_loop = true;
 
-    function get_excluded_posts(){
-      if($this->excluded_posts === false){
+    function get_excluded_posts() {
+      if ($this->excluded_posts === false) {
         $excluded_posts = array();
 
         $this->filter_loop = false;
@@ -381,23 +381,23 @@ if (!class_exists('FooAuth_Single_Signon')) {
 
         $user = $this->get_current_user_info();
 
-        foreach($site_posts as $site_post){
+        foreach ($site_posts as $site_post) {
           $authorized_groups = get_post_meta($site_post->ID, 'fooauth-authorized-groups', true);
 
-          if(!empty($authorized_groups)){
-            if(!$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)){
+          if (!empty($authorized_groups)) {
+            if (!$this->is_user_authorized($this->get_actual_username($user), $authorized_groups)) {
               $excluded_posts[] = $site_post->ID;
             }
           }
         }
-        $this-$excluded_posts = $excluded_posts;
+        $this - $excluded_posts = $excluded_posts;
       }
       return $this->excluded_posts;
     }
 
     function filter_allowed_posts($wp_query) {
 
-      if($this->filter_loop === false) return;
+      if ($this->filter_loop === false) return;
 
       //exclude all posts from the main query that the user is not authorized to view
       $excluded_posts = $this->get_excluded_posts();
