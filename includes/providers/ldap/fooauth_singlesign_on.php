@@ -395,7 +395,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       return $this->excluded_posts;
     }
 
-    function filter_allowed_posts($wp_query) {
+    function filter_allowed_posts($query) {
 
       if ($this->filter_loop === false) return;
 
@@ -403,7 +403,7 @@ if (!class_exists('FooAuth_Single_Signon')) {
       $excluded_posts = $this->get_excluded_posts();
 
       if (!empty($excluded_posts)) {
-        set_query_var('post__not_in', $excluded_posts);
+        $query->set('post__not_in', $excluded_posts);
       }
     }
   }
